@@ -1,0 +1,109 @@
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+type Query {
+  immeuble(id: ID! @eq): Immeuble @find
+  personnes: [IPersonne] @all
+  proprietaires: [Proprietaire] @all
+  locataires: [Locataire] @all
+  appartements: [Appartement] @all
+  quittancesLoyer: [QuittanceLoyer] @all
+  personne(id: ID! @eq): IPersonne @find
+  proprietaire(id: ID! @eq): Proprietaire @find
+  locataire(id: ID! @eq): Locataire @find
+  appartement(id: ID! @eq): Appartement @find
+  quittanceLoyer(id: ID! @eq): QuittanceLoyer @find
+
+}
+
+type Mutation {
+  # Mutations pour les immeubles
+  creerImmeuble(numero: Int!): Immeuble @create
+  modifierImmeuble(id: ID!, numero: Int): Immeuble @update
+  supprimerImmeuble(id: ID!): Immeuble @delete
+
+  # Mutations pour les personnes
+  creerPersonne(nom: String!, prenom: String!, dateNaissance: String!): IPersonne @create
+  modifierPersonne(id: ID!, nom: String, prenom: String, dateNaissance: String): IPersonne @update
+  supprimerPersonne(id: ID!): IPersonne @delete
+
+  # Mutations pour les propriétaires
+  creerProprietaire(numeroCompte: String!, assujettiTVA: Boolean!): Proprietaire @create
+  modifierProprietaire(id: ID!, numeroCompte: String, assujettiTVA: Boolean): Proprietaire @update
+  supprimerProprietaire(id: ID!): Proprietaire @delete
+
+  # Mutations pour les locataires
+  creerLocataire(nom: String!, prenom: String!, dateNaissance: String!, locatairePrincipal: Boolean!): Locataire @create
+  modifierLocataire(id: ID!, nom: String, prenom: String, dateNaissance: String, locatairePrincipal: Boolean): Locataire @update
+  supprimerLocataire(id: ID!): Locataire @delete
+
+  # Mutations pour les appartements
+  creerAppartement(type: String!, proprietaireId: ID!): Appartement @create
+  modifierAppartement(id: ID!, type: String): Appartement @update
+  supprimerAppartement(id: ID!): Appartement @delete
+
+  # Mutations pour les quittances de loyer
+  emettreQuittanceLoyer(appartementId: ID!, proprietaireId: ID!, locataireId: ID!, montant: Float!, dateEmission: DateTime!): QuittanceLoyer @create
+  modifierQuittanceLoyer(id: ID!, montant: Float, datePaiement: DateTime): QuittanceLoyer @update
+  supprimerQuittanceLoyer(id: ID!): QuittanceLoyer @delete
+
+  mettreAJourLocatairePrincipal(appartementId: ID!, locataireId: ID!): Appartement @update
+  emettreQuittanceLoyer(appartementId: ID!, proprietaireId: ID!, montant: Float!, dateEmission: DateTime!): QuittanceLoyer @create
+  mettreAJourPaiementQuittance(quittanceId: ID!, datePaiement: DateTime!): QuittanceLoyer @update
+}
+
+type Subscription {
+  immeubles: [Immeuble] @subscribe
+  immeuble(id: ID!): Immeuble @subscribe
+  appartement(id: ID!): Appartement @subscribe
+}
+
+type Immeuble {
+  id: ID!
+  numero: Int!
+  nombreAppartements: Int!
+  tauxOccupation: Float!
+  nombreHabitants: Int!
+  nombreAppartementsSurOccupation: Int!
+  nombreAppartementsSousOccupation: Int!
+  appartements: [Appartement] @hasMany
+}
+
+type Appartement {
+  id: ID!
+  type: String!
+  proprietaire: Proprietaire!
+  locataires: [Locataire]!
+  options: [String]!
+  quittancesLoyer: [QuittanceLoyer]!
+}
+
+interface IPersonne {
+  id: ID!
+  nom: String!
+  prenom: String!
+  dateNaissance: String!
+}
+
+type Proprietaire implements IPersonne {
+  id: ID!
+  numeroCompte: String!
+  assujettiTVA: Boolean!
+  appartements: [Appartement] @hasMany
+}
+
+type Locataire implements IPersonne {
+  id: ID!
+  locatairePrincipal: Boolean!
+  appartement: Appartement @belongsTo
+}
+
+type QuittanceLoyer {
+  id: ID!
+  montant: Float!
+  dateEmission: DateTime!
+  datePaiement: DateTime
+  appartement: Appartement @belongsTo
+  proprietaire: Proprietaire @belongsTo
+  locataire: Locataire @belongsTo
+}
+
